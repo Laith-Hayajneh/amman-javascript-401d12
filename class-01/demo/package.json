@@ -1,0 +1,28 @@
+{
+  "name": "401d12-express",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest --coverage",
+    "dev": "nodemon"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IbrahimSwaiss/401d12-express.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IbrahimSwaiss/401d12-express/issues"
+  },
+  "homepage": "https://github.com/IbrahimSwaiss/401d12-express#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "jest": "^27.0.6",
+    "supertest": "^6.1.5"
+  }
+}
