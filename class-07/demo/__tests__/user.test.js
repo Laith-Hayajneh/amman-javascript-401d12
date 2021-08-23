@@ -1,48 +1,55 @@
+// 1 - create actual testing database and then drop datatabase after all tests are done
+// 2 - to create in memory database - sqlite3 database file in memory
+
 'use strict';
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const UserSchema = require('../usersSchema.js');
 const { Sequelize, DataTypes } = require('sequelize');
+const UsersSchema = require('../usersSchema');
 
-const sequelize = new Sequelize('postgres://postgres@localhost:5432/bearerauth');
-const Users = UserSchema(sequelize, DataTypes);
+const sequelize = new Sequelize('postgres://postgres@localhost:5432/testdb');
+
+const Users = UsersSchema(sequelize, DataTypes);
 
 beforeAll(async () => {
-  await sequelize.sync();
+    await sequelize.sync();
 });
+
 afterAll(async () => {
-  await sequelize.drop();
+    await sequelize.drop();
 });
 
-describe('User schema', () => {
+describe('Bearer Auth', () => {
+    let userInfo = {
+        username: 'Tareq',
+        password: '123'
+    }
 
-  let userInfo = {
-    username: 'User',
-    password: 'test',
-  }
+    it('should create a user with a hashed password', async () => {
+        // arrange
 
-  test('Should create a user with a hashed password', async () => {
-    let user = await Users.create(userInfo);
-    expect(user.id).toBeTruthy();
-    expect(user.username).toBeTruthy();
-    expect(user.password).toBeTruthy();
-    expect(user.password).not.toEqual('test');
+        // act
+        let user = await Users.create(userInfo);
+        
+        let isValid = await bcrypt.compare(userInfo.password, user.password);
 
-    let match = await bcrypt.compare('test', user.password);
-    expect(match).toBeTruthy();
-  });
+        // assert
+        expect(user.id).toBeTruthy();
+        //check user name and password
+        expect(isValid).toBeTruthy();
+    });
 
-  test('Should attach a token on find', async () => {
+    it('should attach a teken on find', async () => {
+        //arrange 
 
-    let user = await Users.findOne({ where: { username: userInfo.username } });
-    console.log(user);
-    expect(user.username).toEqual(userInfo.username);
-    expect(user.token).toBeTruthy();
-    expect(jwt.decode(user.token).username).toEqual(userInfo.username);
+        //act
+        let user = await Users.findOne({ username: userInfo.username});
+        let decodedJwt = jwt.decode(user.token);
 
-    let users = await Users.findAll({ where: { username: userInfo.username } });
-    expect(users[0].username).toEqual(userInfo.username);
-    expect(users[0].token).toBeTruthy();
-  });
+        // assert
+        expect(user.username).toEqual(userInfo.username);
+        expect(user.token).toBeTruthy();
+        expect(decodedJwt.username).toEqual(userInfo.username);
+    });
 });

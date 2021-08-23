@@ -1,43 +1,39 @@
 'use strict';
 
-// 3rd Party Resources
 const express = require('express');
 const { Sequelize, DataTypes } = require('sequelize');
 const UserSchema = require('./usersSchema.js');
-const basicAuth = require('./basic-auth-middleware.js');
-const bearerAuth = require('./bearer-auth-middleware.js');
-const DATABASE_URL = process.env.DATABASE_URL || 'postgres://postgres@localhost:5432/bearerauth';
+const basicAuth = require('./middleware/basic-auth');
+const bearerAuth = require('./middleware/bearer-auth');
 
-// Prepare the express app
 const app = express();
+const sequelize = new Sequelize('postgres://postgres@localhost:5432/bearerauth');
 
-const sequelize = new Sequelize(DATABASE_URL);
 const Users = UserSchema(sequelize, DataTypes);
 
-// App Level MW
-app.use(express.static('./public'));
+
+// app level middleware
 app.use(express.json());
 
-// echo '{"username":"john","password":"foo"}' | http post :3000/signup
+// {"username":"test", "password":"test"}
 app.post('/signup', (req, res) => {
-  Users.create(req.body)
-    .then(user => {
-      res.status(200).send(user);
-    })
-    .catch(e => { res.status(403).send("Error Creating User"); });
+    // check if user name exists
+    console.log(req.body);
+    Users.create(req.body)
+        .then(user => res.status(201).send(user))
+        .catch(err => res.status(400).send(err))
 });
 
-// http post :3000/signin -a john:foo
 app.post('/signin', basicAuth(Users), (req, res) => {
-  res.status(200).send(req.user);
+    // the user will have the user info and the token
+    res.status(200).send(req.user);
 });
 
 app.get('/user', bearerAuth(Users), (req, res) => {
-  res.status(200).json(req.user);
+    res.status(200).send(req.user);
 });
 
 sequelize.sync()
-  .then(() => {
-    app.listen(3000, () => console.log('server up'));
-  })
-  .catch(e => console.error('Could not start server', e.message));
+    .then(() => {
+        app.listen(3000, () => console.log('Listening on port 3000'));
+    }).catch(err => console.log(err));
